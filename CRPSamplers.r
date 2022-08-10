@@ -110,7 +110,7 @@ sampler_myAlpha <- nimbleFunction(
 ## Sampler for animal activity centres for when the exist and returns fast if not.
 ##--------------------------------------------------------------------------
 sampler_myzs_CRP <- nimbleFunction(
-    name = 'sampler_myzs_BD',
+    name = 'sampler_myzs_CRP',
     contains = sampler_BASE,
     setup = function(model, mvSaved, target, control) {
 		scale <- extractControlElement(control, 'scale', 1)		

@@ -55,15 +55,39 @@ dTrap <- nimbleFunction(
     }
 )
 
+
 ##--------------------------------------------------------------------------
 ## Didn't really implement this.
 ##--------------------------------------------------------------------------
 rTrap <- nimbleFunction(
     run = function(n = integer(0), p = double(2), ID = integer(0)) {
         returnType(integer(0))
-        return(rcat(1, p[ID]/max(p[ID,])))
+        return(rcat(1, p[ID,]/max(p[ID,])))
     }
 )
+
+
+##--------------------------------------------------------------------------
+## Dirty little internal trick to add whatever probs anyway I please and avoiding the zero or ones trick.
+##--------------------------------------------------------------------------
+dTrick <- nimbleFunction(
+    run = function(x = integer(0), p = double(0), log = integer(0, default = 0)) {
+        returnType(double(0))
+		if(log) return(log(p)) else return(p)
+    }
+)
+
+##--------------------------------------------------------------------------
+## Return something....
+##--------------------------------------------------------------------------
+rTrick <- nimbleFunction(
+    run = function(n = integer(0), p = double(0)) {
+        returnType(integer(0))
+        return(rexp(1, p))
+    }
+)
+
+
 
 ##--------------------------------------------------------------------------
 ## Distribution with cue production time marginalized:
@@ -196,7 +220,9 @@ registerDistributions(
 		 dID = list(BUGSdist = 'dID(pID)',
                    types = c('value = integer(0)', 'pID = double(1)')),
 		 dTrap = list(BUGSdist = 'dTrap(p, ID)',
-                   types = c('value = integer(0)', 'p = double(2)', 'ID = integer(0)')),				   
+                   types = c('value = integer(0)', 'p = double(2)', 'ID = integer(0)')),
+		 dTrick = list(BUGSdist = 'dTrick(p)',
+                   types = c('value = integer(0)', 'p = double(0)')),			   
 		 dnorm_vector_marg = list(BUGSdist = 'dnorm_vector_marg(mean, sd, y)',
 				   types = c('value = double(1)', 'mean = double(1)', 'sd = double(0)', 'y = double(1)')),
       	 dPoisBin = list(
