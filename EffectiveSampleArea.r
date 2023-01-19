@@ -84,4 +84,24 @@ ESA_AC <- nimbleRcall(function(d2mask = double(2), lambda = double(0), sigma=dou
 		Rfun = 'RESA_Cam',
 		returnType = double(0)
 		)		
-		
+
+
+library(Rcpp)
+library(RcppArmadillo)
+sourceCpp("C:/Users/Paul/Documents/GitHub/PhDNimbleFunctions/helperCPP.cpp")
+
+ESA_C_CPP <- nimbleRcall(function(d2mask = double(2), sigma=double(0), 
+								g0=double(0), area = double(0), detfn = integer(0)){}, 
+		Rfun = 'CPP_ESA_C',
+		returnType = double(0)
+		)
+ESA_A_CPP <- nimbleRcall(function(d2mask = double(2), lambda = double(0), sigma=double(0), 
+								g0=double(0), area = double(0), detfn = integer(0)){}, 
+		Rfun = 'CPP_ESA_A',
+		returnType = double(0)
+		)
+ESA_AC_CPP <- nimbleRcall(function(d2mask = double(2), lambda = double(0), sigma=double(0), 
+								area = double(0)){}, 
+		Rfun = 'CPP_ESA_Cam',
+		returnType = double(0)
+		)

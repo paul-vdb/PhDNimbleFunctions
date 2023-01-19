@@ -107,7 +107,7 @@ sampler_myAlpha <- nimbleFunction(
 )
 
 ##--------------------------------------------------------------------------
-## Sampler for animal activity centres for when the exist and returns fast if not.
+## Sampler for animal activity centres for when they exist and returns fast if not.
 ##--------------------------------------------------------------------------
 sampler_myzs_CRP <- nimbleFunction(
     name = 'sampler_myzs_CRP',
@@ -126,6 +126,49 @@ sampler_myzs_CRP <- nimbleFunction(
 				model[[target]][2] <<- runif(1, ylim[1], ylim[2])
 				model$calculate(calcNodes)
 				jump <- TRUE
+		}else{
+			newX <- model[[target]] + rnorm(2, 0, scale)
+			lpcurrent <- model$getLogProb(calcNodes)
+			model[[target]] <<- newX
+			lpprop <- model$calculate(calcNodes)
+			logMHR <- lpprop - lpcurrent
+			jump <- decide(logMHR)
+		}
+		if(jump) {
+			nimCopy(from = model, to = mvSaved, row = 1, nodes = calcNodes, logProb = TRUE)
+        } else {
+			nimCopy(from = mvSaved, to = model, row = 1, nodes = calcNodes, logProb = TRUE)
+        }
+    },
+    methods = list( 
+		reset = function() {} 
+	)
+)
+
+##--------------------------------------------------------------------------
+## Sampler for animal activity centres for when they exist and returns fast if not.
+## This sampler samples z_k = 0 from the conditional distribution of calls.
+##--------------------------------------------------------------------------
+sampler_myzs_CRP_cond <- nimbleFunction(
+    name = 'sampler_myzs_CRP',
+    contains = sampler_BASE,
+    setup = function(model, mvSaved, target, control) {
+		scale <- extractControlElement(control, 'scale', 1)		
+        calcNodes <- model$getDependencies(target)
+        nodeIndex <- as.numeric(gsub(".*?([0-9]+).*", '\\1', target))		
+		xlim <- control$xlim
+		ylim <- control$ylim
+    },
+    run = function() {
+		if(model[['z']][nodeIndex] == 0) 
+		{
+				model[[target]][1] <<- runif(1, xlim[1], xlim[2])
+				model[[target]][2] <<- runif(1, ylim[1], ylim[2])
+				lpcurrent <- model[['p.']][nodeIndex]
+				model$calculate(calcNodes)
+				lpprop <- model[['p.']][nodeIndex]
+				logMHR <- lpprop - lpcurrent
+				jump <- decide(logMHR)
 		}else{
 			newX <- model[[target]] + rnorm(2, 0, scale)
 			lpcurrent <- model$getLogProb(calcNodes)

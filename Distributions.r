@@ -212,6 +212,34 @@ rPoisSC <- nimbleFunction(
 
 
 ##--------------------------------------------------------------------------
+## Distribution to vectorize the Poisson counts
+##--------------------------------------------------------------------------
+dpois_vector <- nimbleFunction(
+  run = function( x = double(1),
+                  lambda = double(1),
+				  J = double(0),
+                  log = integer(0, default = 0)
+                  ) {
+    returnType(double(0))
+    logProb <- sum(dpois(x, lambda, log = TRUE))
+    if(log) return(logProb) else return(exp(logProb))
+  })
+
+##--------------------------------------------------------------------------
+## Random distribution for vector Poisson
+##--------------------------------------------------------------------------
+rpois_vector <- nimbleFunction(
+  run = function( n = integer(0, default = 1),
+                  lambda = double(1),
+				  J = double(0))
+  {
+    returnType(double(1))
+    return(rpois(J, lambda))
+  })
+
+
+
+##--------------------------------------------------------------------------
 ## Register Distributions
 ##--------------------------------------------------------------------------
 registerDistributions(
@@ -234,8 +262,12 @@ registerDistributions(
 				   types = c('value = double(1)', 'lambda = double(2)', 'J = integer(0)')
 				   ),
 		dbinom_vector_ascr = list(
-			BUGSdist = 'dbinom_vector_ascr(size, prob, pcapt)', Rdist = 'dbinom_vector_ascr(size, prob, pcapt)',
-			types = c('value = double(1)','size = double(1)','prob = double(1)', 'pcapt = double(0)')
-				)
-	)
+				   BUGSdist = 'dbinom_vector_ascr(size, prob, pcapt)', Rdist = 'dbinom_vector_ascr(size, prob, pcapt)',
+				   types = c('value = double(1)','size = double(1)','prob = double(1)', 'pcapt = double(0)')
+				   ),
+		dpois_vector = list(
+				   BUGSdist = 'dpois_vector(lambda, J)', Rdist = 'dpois_vector(lambda, J)',
+				   types = c('value = double(1)', 'lambda = double(1)', 'J = double(0)')
+				   )		   
+		)
 )
