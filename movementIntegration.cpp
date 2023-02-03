@@ -199,6 +199,69 @@ double integrateTimeCPP(const double& time,
 	return Hk;
 }
 
+// [[Rcpp::export]]
+double integrateTimeHackCPP(const double& time,
+					const double& timePrev,
+					const arma::mat& traps, 
+					const arma::vec& XPrev,
+					const arma::vec& S,
+					const double& lambda,
+					const double& lambda2,
+					const double& sigma,	// limiting sigma of OU.
+					const double& beta,
+					const double& delta,
+					const double& toSkip) {
+	
+	int J = traps.n_rows;
+	arma::vec skip = arma::zeros(J);
+	if(toSkip == 1){
+		for(int k=0; k < J; k++)
+		{
+			double tmp = (pow(traps(k,0) - S(0), 2) + pow(traps(k,1) - S(1), 2));
+			if(tmp > 16*sigma*sigma) { // 4 sigma buffer on distance.
+				skip(k) = 1;
+			}
+		}
+	}
+	double tDiff = time - timePrev;
+	double N = ceil( tDiff/delta );
+	double deltaNew = tDiff / N;
+	double ti = deltaNew / 2.0;
+	
+	double x1 = 0.0;
+	double x2 = 0.0;
+	double new2Var = 0.0;
+	
+	double Hk = 0.0;
+	double stepsDelta = 0.0;
+	
+	for (int i = 0; i < N; i++) {
+		if(ti < 4/beta){
+			x1 = S(0) + (XPrev(0) - S(0))*exp(-beta*ti);
+			x2 = S(1) + (XPrev(1) - S(1))*exp(-beta*ti);
+			new2Var = 2*(1-exp(-2*beta*ti))*(sigma*sigma);
+			for (int j = 0; j < J; j++) {
+				if(skip(j) == 0){
+						Hk += lambda2*exp(-beta*ti) + lambda*exp(-(pow(traps(j,0) - x1, 2) + pow(traps(j,1) - x2, 2))/new2Var);
+				}
+			}
+			ti += deltaNew;
+		}else{
+			stepsDelta ++;
+		}
+	}
+	if(stepsDelta > 0)
+	{
+		for (int j = 0; j < J; j++) {
+			if(skip(j) == 0){
+					Hk += lambda*stepsDelta*exp(-(pow(traps(j,0) - S(0), 2) + pow(traps(j,1) - S(1), 2))/(2*sigma*sigma));
+			}
+		}
+	}
+	Hk *= deltaNew;
+	return Hk;
+}
+
 
 // [[Rcpp::export]]
 arma::vec integrateTimeCPPMask(const double& time,
